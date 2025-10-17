@@ -45,7 +45,7 @@ const Cart = () => {
                         {language === "ar" ? item.title_ar : item.title}
                       </h3>
                       <p className="text-lg font-bold text-primary mb-2">
-                        {item.price.toFixed(2)} {t("EGP", "جنيه")}
+                        {Math.round(item.price)} {t("EGP", "جنيه")}
                       </p>
                       <div className="flex items-center gap-2">
                         <Button
@@ -87,11 +87,11 @@ const Cart = () => {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
                   <span>{t("Subtotal", "المجموع الفرعي")}</span>
-                  <span>{total.toFixed(2)} {t("EGP", "جنيه")}</span>
+                  <span>{Math.round(total)} {t("EGP", "جنيه")}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold pt-2 border-t">
                   <span>{t("Total", "الإجمالي")}</span>
-                  <span>{total.toFixed(2)} {t("EGP", "جنيه")}</span>
+                  <span>{Math.round(total)} {t("EGP", "جنيه")}</span>
                 </div>
               </div>
               <Link to="/checkout">

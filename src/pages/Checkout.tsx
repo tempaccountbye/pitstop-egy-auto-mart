@@ -193,12 +193,12 @@ const Checkout = () => {
                   <span>
                     {language === "ar" ? item.title_ar : item.title} x {item.quantity}
                   </span>
-                  <span>{(item.price * item.quantity).toFixed(2)} {t("EGP", "جنيه")}</span>
+                  <span>{Math.round(item.price * item.quantity)} {t("EGP", "جنيه")}</span>
                 </div>
               ))}
               <div className="flex justify-between text-lg font-bold pt-2 border-t">
                 <span>{t("Total", "الإجمالي")}</span>
-                <span>{total.toFixed(2)} {t("EGP", "جنيه")}</span>
+                <span>{Math.round(total)} {t("EGP", "جنيه")}</span>
               </div>
             </div>
           </Card>

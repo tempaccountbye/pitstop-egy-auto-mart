@@ -62,7 +62,7 @@ export const ProductCard = ({
         <h3 className="font-semibold text-lg mb-2 line-clamp-1">{displayTitle}</h3>
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{displayDescription}</p>
         <p className="text-2xl font-bold text-primary">
-          {price.toFixed(2)} {t("EGP", "جنيه")}
+          {Math.round(price)} {t("EGP", "جنيه")}
         </p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
