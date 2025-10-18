@@ -50,6 +50,17 @@ const Checkout = () => {
       return;
     }
 
+    const minimumOrder = Number(import.meta.env.VITE_MINIMUM_ORDER) || 0;
+    if (total < minimumOrder) {
+      toast.error(
+        t(
+          `Minimum order amount is ${minimumOrder} EGP`,
+          `الحد الأدنى للطلب هو ${minimumOrder} جنيه`
+        )
+      );
+      return;
+    }
+
     setLoading(true);
 
     try {

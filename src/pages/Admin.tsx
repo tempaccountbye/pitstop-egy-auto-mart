@@ -14,7 +14,7 @@ import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut } from "lucide-react";
 
 interface Product {
   id: string;
@@ -49,8 +49,8 @@ interface Order {
 const Admin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -72,12 +72,40 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("admin_auth");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-      loadData();
-    }
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate("/admin-auth");
+        return;
+      }
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .single();
+
+      if (!roles) {
+        toast.error(t("Access denied. Admin privileges required.", "تم رفض الوصول. مطلوب صلاحيات المسؤول."));
+        navigate("/");
+        return;
+      }
+
+      setIsAdmin(true);
+      loadData();
+    } catch (error) {
+      console.error("Auth check error:", error);
+      navigate("/admin-auth");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadData = async () => {
     const { data: productsData } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -89,21 +117,9 @@ const Admin = () => {
     if (ordersData) setOrders(ordersData);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === "admin123") {
-      sessionStorage.setItem("admin_auth", "true");
-      setIsAuthenticated(true);
-      loadData();
-    } else {
-      toast.error(t("Invalid password", "كلمة مرور خاطئة"));
-    }
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_auth");
-    setIsAuthenticated(false);
-    navigate("/");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/admin-auth");
   };
 
   const handleSaveProduct = async () => {
@@ -183,51 +199,34 @@ const Admin = () => {
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
       .from("orders")
-      .update({ status })
+      .update({ status: newStatus })
       .eq("id", orderId);
     
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success(t("Order status updated", "تم تحديث حالة الطلب"));
-      loadData();
+      return;
     }
+
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+
+    toast.success(t("Order status updated", "تم تحديث حالة الطلب"));
   };
 
-  if (!isAuthenticated) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container py-16">
-          <Card className="max-w-md mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">
-              {t("Admin Login", "تسجيل دخول المسؤول")}
-            </h1>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <Label htmlFor="password">
-                  {t("Password", "كلمة المرور")}
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {t("Login", "تسجيل الدخول")}
-              </Button>
-            </form>
-          </Card>
-        </main>
-        <Footer />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">{t("Loading...", "جاري التحميل...")}</div>
       </div>
     );
+  }
+
+  if (!isAdmin) {
+    return null;
   }
 
   return (
@@ -239,6 +238,7 @@ const Admin = () => {
             {t("Admin Panel", "لوحة التحكم")}
           </h1>
           <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
             {t("Logout", "تسجيل الخروج")}
           </Button>
         </div>
@@ -532,13 +532,13 @@ const Admin = () => {
                           value={order.status}
                           onValueChange={(value) => handleUpdateOrderStatus(order.id, value)}
                         >
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-32 bg-background">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-background z-50">
                             <SelectItem value="new">{t("New", "جديد")}</SelectItem>
                             <SelectItem value="processing">{t("Processing", "قيد المعالجة")}</SelectItem>
-                            <SelectItem value="delivering">{t("Delivering", "قيد التوصيل")}</SelectItem>
+                            <SelectItem value="shipped">{t("Shipped", "تم الشحن")}</SelectItem>
                             <SelectItem value="delivered">{t("Delivered", "تم التوصيل")}</SelectItem>
                             <SelectItem value="cancelled">{t("Cancelled", "ملغي")}</SelectItem>
                           </SelectContent>
