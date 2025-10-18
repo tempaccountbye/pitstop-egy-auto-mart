@@ -49,8 +49,9 @@ interface Order {
 const Admin = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showLogin, setShowLogin] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -72,38 +73,26 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    checkAuth();
+    const isLoggedIn = sessionStorage.getItem("admin_authenticated") === "true";
+    if (isLoggedIn) {
+      setIsAuthenticated(true);
+      setShowLogin(false);
+      loadData();
+    }
   }, []);
 
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate("/admin-auth");
-        return;
-      }
-
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
-
-      if (!roles) {
-        toast.error(t("Access denied. Admin privileges required.", "تم رفض الوصول. مطلوب صلاحيات المسؤول."));
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+    
+    if (password === adminPassword) {
+      sessionStorage.setItem("admin_authenticated", "true");
+      setIsAuthenticated(true);
+      setShowLogin(false);
       loadData();
-    } catch (error) {
-      console.error("Auth check error:", error);
-      navigate("/admin-auth");
-    } finally {
-      setLoading(false);
+      toast.success(t("Login successful", "تم تسجيل الدخول بنجاح"));
+    } else {
+      toast.error(t("Invalid password", "كلمة مرور خاطئة"));
     }
   };
 
@@ -117,9 +106,12 @@ const Admin = () => {
     if (ordersData) setOrders(ordersData);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/admin-auth");
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_authenticated");
+    setIsAuthenticated(false);
+    setShowLogin(true);
+    setPassword("");
+    toast.success(t("Logged out", "تم تسجيل الخروج"));
   };
 
   const handleSaveProduct = async () => {
@@ -217,16 +209,32 @@ const Admin = () => {
     toast.success(t("Order status updated", "تم تحديث حالة الطلب"));
   };
 
-  if (loading) {
+  if (showLogin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">{t("Loading...", "جاري التحميل...")}</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Card className="w-full max-w-md p-8">
+          <h1 className="text-2xl font-bold text-center mb-6">
+            {t("Admin Login", "تسجيل دخول المسؤول")}
+          </h1>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="password">{t("Password", "كلمة المرور")}</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t("Enter admin password", "أدخل كلمة مرور المسؤول")}
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              {t("Login", "تسجيل الدخول")}
+            </Button>
+          </form>
+        </Card>
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return (
