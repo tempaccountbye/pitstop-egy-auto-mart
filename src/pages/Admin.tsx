@@ -14,7 +14,7 @@ import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, LogOut } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, Eye } from "lucide-react";
 
 interface Product {
   id: string;
@@ -526,6 +526,7 @@ const Admin = () => {
                     <TableHead>{t("Total", "المجموع")}</TableHead>
                     <TableHead>{t("Status", "الحالة")}</TableHead>
                     <TableHead>{t("Date", "التاريخ")}</TableHead>
+                    <TableHead>{t("Actions", "الإجراءات")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -553,6 +554,15 @@ const Admin = () => {
                         </Select>
                       </TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => navigate(`/admin/order/${order.id}`)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
