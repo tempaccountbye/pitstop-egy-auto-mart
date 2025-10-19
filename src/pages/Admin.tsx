@@ -14,7 +14,7 @@ import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, LogOut, Eye } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, Eye, Settings } from "lucide-react";
 
 interface Product {
   id: string;
@@ -70,6 +70,28 @@ const Admin = () => {
   const [categoryForm, setCategoryForm] = useState({
     name: "",
     name_ar: "",
+  });
+  const [showEnvEditor, setShowEnvEditor] = useState(false);
+  const [envVars, setEnvVars] = useState({
+    VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD || "",
+    VITE_STORE_NAME_EN: import.meta.env.VITE_STORE_NAME_EN || "",
+    VITE_STORE_NAME_AR: import.meta.env.VITE_STORE_NAME_AR || "",
+    VITE_MINIMUM_ORDER: import.meta.env.VITE_MINIMUM_ORDER || "",
+    VITE_WHATSAPP_NUMBER: import.meta.env.VITE_WHATSAPP_NUMBER || "",
+    VITE_FACEBOOK_URL: import.meta.env.VITE_FACEBOOK_URL || "",
+    VITE_PRODUCTS_PER_PAGE: import.meta.env.VITE_PRODUCTS_PER_PAGE || "",
+    VITE_PRODUCTS_PER_ROW: import.meta.env.VITE_PRODUCTS_PER_ROW || "",
+    VITE_CHECKOUT_MESSAGE_EN: import.meta.env.VITE_CHECKOUT_MESSAGE_EN || "",
+    VITE_CHECKOUT_MESSAGE_AR: import.meta.env.VITE_CHECKOUT_MESSAGE_AR || "",
+    VITE_SEND_EMAIL_NOTIFICATIONS: import.meta.env.VITE_SEND_EMAIL_NOTIFICATIONS || "",
+    VITE_NOTIFICATION_EMAIL: import.meta.env.VITE_NOTIFICATION_EMAIL || "",
+    VITE_EMAIL_SERVICE_TYPE: import.meta.env.VITE_EMAIL_SERVICE_TYPE || "",
+    VITE_SMTP_HOST: import.meta.env.VITE_SMTP_HOST || "",
+    VITE_SMTP_PORT: import.meta.env.VITE_SMTP_PORT || "",
+    VITE_SMTP_USER: import.meta.env.VITE_SMTP_USER || "",
+    VITE_SMTP_PASSWORD: import.meta.env.VITE_SMTP_PASSWORD || "",
+    VITE_EMAIL_FROM_ADDRESS: import.meta.env.VITE_EMAIL_FROM_ADDRESS || "",
+    VITE_EMAIL_FROM_NAME: import.meta.env.VITE_EMAIL_FROM_NAME || "",
   });
 
   useEffect(() => {
@@ -245,10 +267,139 @@ const Admin = () => {
           <h1 className="text-3xl font-bold">
             {t("Admin Panel", "لوحة التحكم")}
           </h1>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            {t("Logout", "تسجيل الخروج")}
-          </Button>
+          <div className="flex gap-2">
+            <Dialog open={showEnvEditor} onOpenChange={setShowEnvEditor}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{t("Environment Configuration", "إعدادات البيئة")}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="text-sm text-muted-foreground mb-4">
+                    {t("Note: Changes require page reload", "ملاحظة: التغييرات تتطلب إعادة تحميل الصفحة")}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">{t("Store Settings", "إعدادات المتجر")}</h3>
+                    <div>
+                      <Label>VITE_STORE_NAME_EN</Label>
+                      <Input value={envVars.VITE_STORE_NAME_EN} onChange={(e) => setEnvVars({...envVars, VITE_STORE_NAME_EN: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_STORE_NAME_AR</Label>
+                      <Input value={envVars.VITE_STORE_NAME_AR} onChange={(e) => setEnvVars({...envVars, VITE_STORE_NAME_AR: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_MINIMUM_ORDER</Label>
+                      <Input type="number" value={envVars.VITE_MINIMUM_ORDER} onChange={(e) => setEnvVars({...envVars, VITE_MINIMUM_ORDER: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">{t("Contact Information", "معلومات الاتصال")}</h3>
+                    <div>
+                      <Label>VITE_WHATSAPP_NUMBER</Label>
+                      <Input value={envVars.VITE_WHATSAPP_NUMBER} onChange={(e) => setEnvVars({...envVars, VITE_WHATSAPP_NUMBER: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_FACEBOOK_URL</Label>
+                      <Input value={envVars.VITE_FACEBOOK_URL} onChange={(e) => setEnvVars({...envVars, VITE_FACEBOOK_URL: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">{t("Email Configuration", "إعدادات البريد الإلكتروني")}</h3>
+                    <div>
+                      <Label>VITE_SEND_EMAIL_NOTIFICATIONS</Label>
+                      <Select value={envVars.VITE_SEND_EMAIL_NOTIFICATIONS} onValueChange={(value) => setEnvVars({...envVars, VITE_SEND_EMAIL_NOTIFICATIONS: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">True</SelectItem>
+                          <SelectItem value="false">False</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>VITE_NOTIFICATION_EMAIL</Label>
+                      <Input value={envVars.VITE_NOTIFICATION_EMAIL} onChange={(e) => setEnvVars({...envVars, VITE_NOTIFICATION_EMAIL: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_EMAIL_SERVICE_TYPE</Label>
+                      <Input placeholder="smtp, sendgrid, resend, etc." value={envVars.VITE_EMAIL_SERVICE_TYPE} onChange={(e) => setEnvVars({...envVars, VITE_EMAIL_SERVICE_TYPE: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_EMAIL_FROM_ADDRESS</Label>
+                      <Input placeholder="noreply@example.com" value={envVars.VITE_EMAIL_FROM_ADDRESS} onChange={(e) => setEnvVars({...envVars, VITE_EMAIL_FROM_ADDRESS: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_EMAIL_FROM_NAME</Label>
+                      <Input placeholder="My Store" value={envVars.VITE_EMAIL_FROM_NAME} onChange={(e) => setEnvVars({...envVars, VITE_EMAIL_FROM_NAME: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_SMTP_HOST</Label>
+                      <Input placeholder="smtp.gmail.com" value={envVars.VITE_SMTP_HOST} onChange={(e) => setEnvVars({...envVars, VITE_SMTP_HOST: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_SMTP_PORT</Label>
+                      <Input placeholder="587" value={envVars.VITE_SMTP_PORT} onChange={(e) => setEnvVars({...envVars, VITE_SMTP_PORT: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_SMTP_USER</Label>
+                      <Input value={envVars.VITE_SMTP_USER} onChange={(e) => setEnvVars({...envVars, VITE_SMTP_USER: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_SMTP_PASSWORD</Label>
+                      <Input type="password" value={envVars.VITE_SMTP_PASSWORD} onChange={(e) => setEnvVars({...envVars, VITE_SMTP_PASSWORD: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold">{t("Other Settings", "إعدادات أخرى")}</h3>
+                    <div>
+                      <Label>VITE_PRODUCTS_PER_PAGE</Label>
+                      <Input type="number" value={envVars.VITE_PRODUCTS_PER_PAGE} onChange={(e) => setEnvVars({...envVars, VITE_PRODUCTS_PER_PAGE: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_PRODUCTS_PER_ROW</Label>
+                      <Input type="number" value={envVars.VITE_PRODUCTS_PER_ROW} onChange={(e) => setEnvVars({...envVars, VITE_PRODUCTS_PER_ROW: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_CHECKOUT_MESSAGE_EN</Label>
+                      <Textarea value={envVars.VITE_CHECKOUT_MESSAGE_EN} onChange={(e) => setEnvVars({...envVars, VITE_CHECKOUT_MESSAGE_EN: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_CHECKOUT_MESSAGE_AR</Label>
+                      <Textarea value={envVars.VITE_CHECKOUT_MESSAGE_AR} onChange={(e) => setEnvVars({...envVars, VITE_CHECKOUT_MESSAGE_AR: e.target.value})} />
+                    </div>
+                    <div>
+                      <Label>VITE_ADMIN_PASSWORD</Label>
+                      <Input type="password" value={envVars.VITE_ADMIN_PASSWORD} onChange={(e) => setEnvVars({...envVars, VITE_ADMIN_PASSWORD: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <p className="text-sm font-mono whitespace-pre-wrap break-all">
+                      {Object.entries(envVars).map(([key, value]) => `${key}="${value}"`).join('\n')}
+                    </p>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    {t("Copy the configuration above and update your .env file manually, then reload the page.", "انسخ الإعدادات أعلاه وحدّث ملف .env يدويًا، ثم أعد تحميل الصفحة.")}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              {t("Logout", "تسجيل الخروج")}
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="products" className="space-y-6">
