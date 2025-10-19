@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,6 @@ import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MapPin, ExternalLink } from "lucide-react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
 
 interface Order {
   id: string;
@@ -29,8 +27,6 @@ const OrderDetail = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [order, setOrder] = useState<Order | null>(null);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
     const isLoggedIn = sessionStorage.getItem("admin_authenticated") === "true";
@@ -54,26 +50,6 @@ const OrderDetail = () => {
     }
 
     setOrder(data);
-
-    // Initialize map if geolocation exists
-    if (data?.geolocation && mapContainer.current) {
-      const [lat, lng] = data.geolocation.split(",").map(Number);
-      
-      mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || "";
-      
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/streets-v12",
-        center: [lng, lat],
-        zoom: 14,
-      });
-
-      new mapboxgl.Marker({ color: "#ef4444" })
-        .setLngLat([lng, lat])
-        .addTo(map.current);
-
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
-    }
   };
 
   if (!order) {
@@ -86,6 +62,7 @@ const OrderDetail = () => {
 
   const [lat, lng] = order.geolocation?.split(",").map(Number) || [0, 0];
   const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+  const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&output=embed`;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -212,9 +189,11 @@ const OrderDetail = () => {
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
               </div>
-              <div
-                ref={mapContainer}
-                className="w-full h-[400px] rounded-lg"
+              <iframe
+                src={embedUrl}
+                className="w-full h-[400px] rounded-lg border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
               />
             </Card>
           )}
