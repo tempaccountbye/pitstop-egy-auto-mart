@@ -187,7 +187,7 @@ const OrderDetail = () => {
                   </a>
                   {matchingIP && (
                     <a
-                      href={`/order/${matchingIP.id}`}
+                      href={`/admin/order/${matchingIP.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ml-2 inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
@@ -270,7 +270,7 @@ const OrderDetail = () => {
                 {t("Browser Fingerprint", "بصمة المتصفح")}
                 {matchingFingerprint && (
                   <a
-                    href={`/order/${matchingFingerprint.id}`}
+                    href={`/admin/order/${matchingFingerprint.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="ml-auto inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
@@ -312,7 +312,7 @@ const OrderDetail = () => {
                   {t("Delivery Location", "موقع التوصيل")}
                   {matchingGeo && (
                     <a
-                      href={`/order/${matchingGeo.id}`}
+                      href={`/admin/order/${matchingGeo.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
