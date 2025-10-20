@@ -72,6 +72,7 @@ const Admin = () => {
     name_ar: "",
   });
   const [showEnvEditor, setShowEnvEditor] = useState(false);
+  const [savingEnv, setSavingEnv] = useState(false);
   const [envVars, setEnvVars] = useState({
     VITE_ADMIN_PASSWORD: import.meta.env.VITE_ADMIN_PASSWORD || "",
     VITE_STORE_NAME_EN: import.meta.env.VITE_STORE_NAME_EN || "",
@@ -229,6 +230,40 @@ const Admin = () => {
     ));
 
     toast.success(t("Order status updated", "تم تحديث حالة الطلب"));
+  };
+
+  const handleSaveEnvVars = async () => {
+    setSavingEnv(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-env', {
+        body: {
+          adminPassword: import.meta.env.VITE_ADMIN_PASSWORD,
+          envVars
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.envContent) {
+        // Create a downloadable file
+        const blob = new Blob([data.envContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '.env';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast.success(t("Environment file downloaded. Replace your .env file and reload.", "تم تنزيل ملف البيئة. استبدل ملف .env وأعد التحميل."));
+        setShowEnvEditor(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message || t("Failed to save", "فشل الحفظ"));
+    } finally {
+      setSavingEnv(false);
+    }
   };
 
   if (showLogin) {
@@ -389,8 +424,17 @@ const Admin = () => {
                     </p>
                   </div>
                   
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setShowEnvEditor(false)}>
+                      {t("Cancel", "إلغاء")}
+                    </Button>
+                    <Button onClick={handleSaveEnvVars} disabled={savingEnv}>
+                      {savingEnv ? t("Saving...", "جاري الحفظ...") : t("Save & Download", "حفظ وتنزيل")}
+                    </Button>
+                  </div>
+                  
                   <div className="text-sm text-muted-foreground">
-                    {t("Copy the configuration above and update your .env file manually, then reload the page.", "انسخ الإعدادات أعلاه وحدّث ملف .env يدويًا، ثم أعد تحميل الصفحة.")}
+                    {t("Click Save to download the updated .env file, then replace your existing .env file and reload the page.", "اضغط حفظ لتنزيل ملف .env المحدث، ثم استبدل ملف .env الموجود وأعد تحميل الصفحة.")}
                   </div>
                 </div>
               </DialogContent>

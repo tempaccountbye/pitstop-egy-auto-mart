@@ -6,7 +6,8 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, ExternalLink, Fingerprint, Globe } from "lucide-react";
+import { decodeFingerprint } from "@/utils/fingerprint";
 
 interface Order {
   id: string;
@@ -20,6 +21,8 @@ interface Order {
   items: any;
   geolocation: string | null;
   notes: string | null;
+  ip_address: string | null;
+  fingerprint_b64: string | null;
 }
 
 const OrderDetail = () => {
@@ -63,6 +66,8 @@ const OrderDetail = () => {
   const [lat, lng] = order.geolocation?.split(",").map(Number) || [0, 0];
   const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
   const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&output=embed`;
+  
+  const decodedFingerprint = order.fingerprint_b64 ? decodeFingerprint(order.fingerprint_b64) : null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -107,6 +112,15 @@ const OrderDetail = () => {
                 <div>
                   <span className="font-semibold">{t("Notes", "ملاحظات")}:</span>{" "}
                   {order.notes}
+                </div>
+              )}
+              {order.ip_address && (
+                <div>
+                  <span className="font-semibold inline-flex items-center gap-1">
+                    <Globe className="h-4 w-4" />
+                    {t("IP Address", "عنوان IP")}:
+                  </span>{" "}
+                  <code className="bg-muted px-2 py-1 rounded text-sm">{order.ip_address}</code>
                 </div>
               )}
             </div>
@@ -172,6 +186,36 @@ const OrderDetail = () => {
               ))}
             </div>
           </Card>
+
+          {order.fingerprint_b64 && (
+            <Card className="p-6 md:col-span-2">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Fingerprint className="h-5 w-5" />
+                {t("Browser Fingerprint", "بصمة المتصفح")}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold mb-2">{t("Raw (Base64)", "الأصلي (Base64)")}</p>
+                  <code className="block bg-muted p-3 rounded text-xs break-all">
+                    {order.fingerprint_b64}
+                  </code>
+                </div>
+                {decodedFingerprint && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">{t("Decoded Information", "المعلومات المفككة")}</p>
+                    <div className="bg-muted p-4 rounded space-y-2 text-sm">
+                      {Object.entries(decodedFingerprint).map(([key, value]) => (
+                        <div key={key} className="flex justify-between border-b border-border pb-1 last:border-0">
+                          <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                          <span className="text-muted-foreground">{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
 
           {order.geolocation && (
             <Card className="p-6 md:col-span-2">

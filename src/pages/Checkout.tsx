@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { generateFingerprint } from "@/utils/fingerprint";
 
 const Checkout = () => {
   const { items, total, clearCart } = useCart();
@@ -64,6 +65,19 @@ const Checkout = () => {
     setLoading(true);
 
     try {
+      // Generate browser fingerprint
+      const fingerprint = generateFingerprint();
+
+      // Get user's IP address (will be captured by edge function)
+      let ipAddress = '';
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
+
       const { error } = await supabase.from("orders").insert([{
         customer_name: formData.name,
         customer_email: formData.email,
@@ -74,6 +88,8 @@ const Checkout = () => {
         items: items as any,
         total,
         status: "new",
+        ip_address: ipAddress,
+        fingerprint_b64: fingerprint,
       }]);
 
       if (error) throw error;
