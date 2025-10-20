@@ -6,8 +6,9 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, ExternalLink, Fingerprint, Globe } from "lucide-react";
+import { ArrowLeft, MapPin, ExternalLink, Fingerprint, Globe, Link2 } from "lucide-react";
 import { decodeFingerprint } from "@/utils/fingerprint";
+import { calculateDistance, parseGeolocation } from "@/utils/geolocation";
 
 interface Order {
   id: string;
@@ -25,11 +26,20 @@ interface Order {
   fingerprint_b64: string | null;
 }
 
+interface MatchingOrder {
+  id: string;
+  created_at: string;
+  customer_name: string;
+}
+
 const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [order, setOrder] = useState<Order | null>(null);
+  const [matchingFingerprint, setMatchingFingerprint] = useState<MatchingOrder | null>(null);
+  const [matchingIP, setMatchingIP] = useState<MatchingOrder | null>(null);
+  const [matchingGeo, setMatchingGeo] = useState<MatchingOrder | null>(null);
 
   useEffect(() => {
     const isLoggedIn = sessionStorage.getItem("admin_authenticated") === "true";
@@ -53,6 +63,51 @@ const OrderDetail = () => {
     }
 
     setOrder(data);
+    
+    // Find matching orders
+    await findMatchingOrders(data);
+  };
+
+  const findMatchingOrders = async (currentOrder: Order) => {
+    const { data: allOrders, error } = await supabase
+      .from("orders")
+      .select("id, created_at, customer_name, fingerprint_b64, ip_address, geolocation")
+      .neq("id", currentOrder.id)
+      .order("created_at", { ascending: false });
+
+    if (error || !allOrders) return;
+
+    // Find fingerprint match
+    if (currentOrder.fingerprint_b64) {
+      const fpMatch = allOrders.find(o => o.fingerprint_b64 === currentOrder.fingerprint_b64);
+      if (fpMatch) setMatchingFingerprint(fpMatch);
+    }
+
+    // Find IP match
+    if (currentOrder.ip_address) {
+      const ipMatch = allOrders.find(o => o.ip_address === currentOrder.ip_address);
+      if (ipMatch) setMatchingIP(ipMatch);
+    }
+
+    // Find geolocation match (within 200 meters)
+    if (currentOrder.geolocation) {
+      const currentGeo = parseGeolocation(currentOrder.geolocation);
+      if (currentGeo) {
+        const geoMatch = allOrders.find(o => {
+          if (!o.geolocation) return false;
+          const otherGeo = parseGeolocation(o.geolocation);
+          if (!otherGeo) return false;
+          const distance = calculateDistance(
+            currentGeo.lat,
+            currentGeo.lng,
+            otherGeo.lat,
+            otherGeo.lng
+          );
+          return distance <= 200; // Within 200 meters
+        });
+        if (geoMatch) setMatchingGeo(geoMatch);
+      }
+    }
   };
 
   if (!order) {
@@ -121,6 +176,27 @@ const OrderDetail = () => {
                     {t("IP Address", "عنوان IP")}:
                   </span>{" "}
                   <code className="bg-muted px-2 py-1 rounded text-sm">{order.ip_address}</code>
+                  <a
+                    href={`https://ipinfo.io/${order.ip_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 inline-flex items-center text-primary hover:text-primary/80 transition-colors"
+                    title={t("View IP details", "عرض تفاصيل IP")}
+                  >
+                    🌍
+                  </a>
+                  {matchingIP && (
+                    <a
+                      href={`/order/${matchingIP.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                      title={t("Matching order found", "تم العثور على طلب مطابق")}
+                    >
+                      <Link2 className="h-3 w-3" />
+                      {t("Duplicate IP", "IP مكرر")}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -192,6 +268,18 @@ const OrderDetail = () => {
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 <Fingerprint className="h-5 w-5" />
                 {t("Browser Fingerprint", "بصمة المتصفح")}
+                {matchingFingerprint && (
+                  <a
+                    href={`/order/${matchingFingerprint.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-auto inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                    title={t("Matching order found", "تم العثور على طلب مطابق")}
+                  >
+                    <Link2 className="h-3 w-3" />
+                    {t("Duplicate Fingerprint", "بصمة مكررة")}
+                  </a>
+                )}
               </h2>
               <div className="space-y-4">
                 <div>
@@ -220,8 +308,20 @@ const OrderDetail = () => {
           {order.geolocation && (
             <Card className="p-6 md:col-span-2">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold flex items-center gap-2">
                   {t("Delivery Location", "موقع التوصيل")}
+                  {matchingGeo && (
+                    <a
+                      href={`/order/${matchingGeo.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                      title={t("Matching location found (within 200m)", "تم العثور على موقع مطابق (ضمن 200 متر)")}
+                    >
+                      <Link2 className="h-3 w-3" />
+                      {t("Nearby Order", "طلب قريب")}
+                    </a>
+                  )}
                 </h2>
                 <Button
                   variant="outline"
