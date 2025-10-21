@@ -9,12 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Pencil, Trash2, Plus, LogOut, Eye, Settings } from "lucide-react";
+import { Pencil, Trash2, Plus, LogOut, Eye, EyeOff, Settings } from "lucide-react";
 
 interface Product {
   id: string;
@@ -56,6 +57,7 @@ const Admin = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [hideCompletedOrders, setHideCompletedOrders] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [productForm, setProductForm] = useState({
@@ -695,18 +697,29 @@ const Admin = () => {
                             variant={product.visible ? "outline" : "secondary"}
                             size="icon"
                             onClick={async () => {
+                              // Optimistic update
+                              setProducts(products.map(p => 
+                                p.id === product.id ? { ...p, visible: !p.visible } : p
+                              ));
+
                               const { error } = await supabase
                                 .from("products")
                                 .update({ visible: !product.visible })
                                 .eq("id", product.id);
-                              if (!error) {
+                              
+                              if (error) {
+                                // Revert on error
+                                setProducts(products.map(p => 
+                                  p.id === product.id ? { ...p, visible: product.visible } : p
+                                ));
+                                toast.error(t("Failed to update visibility", "فشل تحديث الظهور"));
+                              } else {
                                 toast.success(t("Visibility updated", "تم تحديث الظهور"));
-                                loadData();
                               }
                             }}
                             title={t("Toggle visibility", "تبديل الظهور")}
                           >
-                            {product.visible ? "👁️" : "🚫"}
+                            {product.visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                           </Button>
                           <Button
                             variant="destructive"
@@ -726,7 +739,19 @@ const Admin = () => {
 
           <TabsContent value="orders">
             <Card className="p-6">
-              <h2 className="text-xl font-bold mb-4">{t("Orders", "الطلبات")}</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">{t("Orders", "الطلبات")}</h2>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="hide-completed"
+                    checked={hideCompletedOrders}
+                    onCheckedChange={(checked) => setHideCompletedOrders(checked as boolean)}
+                  />
+                  <Label htmlFor="hide-completed" className="text-sm font-normal cursor-pointer">
+                    {t("Hide canceled/shipped orders", "إخفاء الطلبات الملغية/المشحونة")}
+                  </Label>
+                </div>
+              </div>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -740,7 +765,9 @@ const Admin = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((order) => (
+                  {orders.filter(order => 
+                    !hideCompletedOrders || (order.status !== 'cancelled' && order.status !== 'shipped')
+                  ).map((order) => (
                     <TableRow key={order.id}>
                       <TableCell>{order.customer_name}</TableCell>
                       <TableCell>{order.customer_email}</TableCell>

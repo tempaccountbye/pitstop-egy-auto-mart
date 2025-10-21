@@ -184,7 +184,7 @@ const OrderDetail = () => {
                     className="ml-2 inline-flex items-center text-primary hover:text-primary/80 transition-colors"
                     title={t("View IP details", "عرض تفاصيل IP")}
                   >
-                    🌍
+                    <Globe className="h-4 w-4" />
                   </a>
                   {matchingIP && (
                     <a
