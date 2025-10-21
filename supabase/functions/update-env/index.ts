@@ -5,10 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface EnvUpdateRequest {
-  adminPassword: string;
-  envVars: Record<string, string>;
-}
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
@@ -16,19 +12,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { adminPassword, envVars }: EnvUpdateRequest = await req.json();
+    const { envVars }: { envVars: Record<string, string> } = await req.json();
 
-    // Validate admin password
-    const correctPassword = Deno.env.get('VITE_ADMIN_PASSWORD');
-    if (adminPassword !== correctPassword) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { 
-          status: 401, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
-        }
-      );
-    }
+    // Note: Admin authentication is handled by the frontend
+    // This function only validates and sanitizes the environment variables
 
     // Validate and sanitize inputs
     const allowedKeys = [

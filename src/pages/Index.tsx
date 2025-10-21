@@ -18,6 +18,7 @@ interface Product {
   stock: number;
   image_url: string | null;
   category_id: string | null;
+  visible: boolean;
 }
 
 interface Category {
@@ -58,8 +59,10 @@ const Index = () => {
       product.description_ar.includes(searchQuery);
 
     const matchesCategory = !selectedCategory || product.category_id === selectedCategory;
+    
+    const isVisible = product.visible !== false; // Show product if visible is true or undefined
 
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && isVisible;
   });
 
   return (

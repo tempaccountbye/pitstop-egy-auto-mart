@@ -95,6 +95,7 @@ export type Database = {
           stock: number
           title: string
           title_ar: string
+          visible: boolean
         }
         Insert: {
           category_id?: string | null
@@ -107,6 +108,7 @@ export type Database = {
           stock?: number
           title: string
           title_ar: string
+          visible?: boolean
         }
         Update: {
           category_id?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           stock?: number
           title?: string
           title_ar?: string
+          visible?: boolean
         }
         Relationships: [
           {

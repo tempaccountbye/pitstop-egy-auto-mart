@@ -26,6 +26,7 @@ interface Product {
   stock: number;
   image_url: string | null;
   category_id: string | null;
+  visible: boolean;
 }
 
 interface Category {
@@ -96,7 +97,7 @@ const Admin = () => {
   });
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem("admin_authenticated") === "true";
+    const isLoggedIn = localStorage.getItem("admin_authenticated") === "true";
     if (isLoggedIn) {
       setIsAuthenticated(true);
       setShowLogin(false);
@@ -109,7 +110,7 @@ const Admin = () => {
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
     
     if (password === adminPassword) {
-      sessionStorage.setItem("admin_authenticated", "true");
+      localStorage.setItem("admin_authenticated", "true");
       setIsAuthenticated(true);
       setShowLogin(false);
       loadData();
@@ -130,7 +131,7 @@ const Admin = () => {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("admin_authenticated");
+    localStorage.removeItem("admin_authenticated");
     setIsAuthenticated(false);
     setShowLogin(true);
     setPassword("");
@@ -236,10 +237,7 @@ const Admin = () => {
     setSavingEnv(true);
     try {
       const { data, error } = await supabase.functions.invoke('update-env', {
-        body: {
-          adminPassword: import.meta.env.VITE_ADMIN_PASSWORD,
-          envVars
-        }
+        body: { envVars }
       });
 
       if (error) throw error;
@@ -694,6 +692,23 @@ const Admin = () => {
                             </DialogContent>
                           </Dialog>
                           <Button
+                            variant={product.visible ? "outline" : "secondary"}
+                            size="icon"
+                            onClick={async () => {
+                              const { error } = await supabase
+                                .from("products")
+                                .update({ visible: !product.visible })
+                                .eq("id", product.id);
+                              if (!error) {
+                                toast.success(t("Visibility updated", "تم تحديث الظهور"));
+                                loadData();
+                              }
+                            }}
+                            title={t("Toggle visibility", "تبديل الظهور")}
+                          >
+                            {product.visible ? "👁️" : "🚫"}
+                          </Button>
+                          <Button
                             variant="destructive"
                             size="icon"
                             onClick={() => handleDeleteProduct(product.id)}
@@ -753,7 +768,7 @@ const Admin = () => {
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => navigate(`/admin/order/${order.id}`)}
+                          onClick={() => window.open(`/admin/order/${order.id}`, '_blank')}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>

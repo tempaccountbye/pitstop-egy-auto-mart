@@ -42,7 +42,7 @@ const OrderDetail = () => {
   const [matchingGeo, setMatchingGeo] = useState<MatchingOrder | null>(null);
 
   useEffect(() => {
-    const isLoggedIn = sessionStorage.getItem("admin_authenticated") === "true";
+    const isLoggedIn = localStorage.getItem("admin_authenticated") === "true";
     if (!isLoggedIn) {
       navigate("/admin");
       return;
@@ -73,6 +73,7 @@ const OrderDetail = () => {
       .from("orders")
       .select("id, created_at, customer_name, fingerprint_b64, ip_address, geolocation")
       .neq("id", currentOrder.id)
+      .lt("created_at", currentOrder.created_at)
       .order("created_at", { ascending: false });
 
     if (error || !allOrders) return;
