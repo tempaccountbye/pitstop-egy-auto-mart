@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Order Alert</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; }
+    .header { background-color: #dc2626; padding: 20px; text-align: center; }
+    .header h1 { margin: 0; font-size: 24px; color: #ffffff; }
+    .content { padding: 20px; }
+    .section { margin-bottom: 30px; }
+    .section-title { font-size: 16px; font-weight: bold; color: #1a1a1a; margin-bottom: 10px; }
+    .divider { border-top: 1px solid #e5e5e5; margin: 15px 0; }
+    .order-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: #525252; }
+    .total { display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; font-weight: bold; color: #1a1a1a; border-top: 2px solid #e5e5e5; margin-top: 10px; }
+    .info-row { margin: 5px 0; font-size: 14px; color: #525252; }
+    .info-row strong { color: #1a1a1a; }
+    .button { display: inline-block; background-color: #dc2626; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+    .footer { background-color: #f9f9f9; padding: 20px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 New Order Received</h1>
+    </div>
+    
+    <div class="content">
+      <div class="section">
+        <div class="section-title">Customer Information</div>
+        <div class="divider"></div>
+        <div class="info-row"><strong>Name:</strong> {{CUSTOMER_NAME}}</div>
+        <div class="info-row"><strong>Email:</strong> {{CUSTOMER_EMAIL}}</div>
+        <div class="info-row"><strong>Phone:</strong> {{CUSTOMER_PHONE}}</div>
+        <div class="info-row"><strong>Address:</strong> {{CUSTOMER_ADDRESS}}</div>
+        {{NOTES_SECTION}}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Order Details</div>
+        <div class="divider"></div>
+        {{ORDER_ITEMS}}
+        <div class="total">
+          <span>Total:</span>
+          <span>{{TOTAL}} EGP</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Technical Information</div>
+        <div class="divider"></div>
+        <div class="info-row"><strong>Order ID:</strong> {{ORDER_ID}}</div>
+        <div class="info-row"><strong>Order Time:</strong> {{ORDER_TIME}}</div>
+        <div class="info-row"><strong>IP Address:</strong> {{IP_ADDRESS}}</div>
+        <div class="info-row"><strong>Browser Fingerprint:</strong> {{FINGERPRINT}}</div>
+        {{LOCATION_SECTION}}
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="{{ADMIN_URL}}" class="button">View in Admin Panel</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -78,7 +78,7 @@ const Checkout = () => {
         console.error('Failed to get IP address:', error);
       }
 
-      const { error } = await supabase.from("orders").insert([{
+      const { data: orderData, error } = await supabase.from("orders").insert([{
         customer_name: formData.name,
         customer_email: formData.email,
         customer_phone: formData.phone,
@@ -90,22 +90,34 @@ const Checkout = () => {
         status: "new",
         ip_address: ipAddress,
         fingerprint_b64: fingerprint,
-      }]);
+      }]).select().single();
 
       if (error) throw error;
 
       // Call edge function to send emails
-      await supabase.functions.invoke("send-order-email", {
-        body: {
-          order: {
-            ...formData,
+      try {
+        await supabase.functions.invoke("send-order-email", {
+          body: {
+            orderId: orderData.id,
+            orderTime: new Date().toISOString(),
+            customerName: formData.name,
+            customerEmail: formData.email,
+            customerPhone: formData.phone,
+            customerAddress: formData.address,
+            notes: formData.notes,
             items,
             total,
             geolocation,
+            ipAddress,
+            fingerprint,
+            language,
           },
-          language,
-        },
-      });
+        });
+        console.log("Order emails sent successfully");
+      } catch (emailError) {
+        console.error("Failed to send order emails:", emailError);
+        // Don't throw - order was created successfully
+      }
 
       clearCart();
       navigate("/order-success");

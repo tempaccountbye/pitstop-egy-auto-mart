@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Receipt</title>
+  <style>
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; }
+    .header { background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 2px solid #e5e5e5; }
+    .header h1 { margin: 0; font-size: 24px; color: #1a1a1a; }
+    .content { padding: 20px; }
+    .section { margin-bottom: 30px; }
+    .section-title { font-size: 16px; font-weight: bold; color: #1a1a1a; margin-bottom: 10px; }
+    .divider { border-top: 1px solid #e5e5e5; margin: 15px 0; }
+    .order-item { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: #525252; }
+    .total { display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; font-weight: bold; color: #1a1a1a; border-top: 2px solid #e5e5e5; margin-top: 10px; }
+    .info-row { margin: 5px 0; font-size: 14px; color: #525252; }
+    .info-row strong { color: #1a1a1a; }
+    .footer { background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #737373; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>{{STORE_NAME}}</h1>
+    </div>
+    
+    <div class="content">
+      <div class="section">
+        <h2 class="section-title">Order Confirmation</h2>
+        <p style="color: #737373; font-size: 14px;">Thank you for your order, {{CUSTOMER_NAME}}!</p>
+        <p style="color: #737373; font-size: 14px;">We have received your order and will contact you soon to confirm the details.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Order Details</div>
+        <div class="divider"></div>
+        {{ORDER_ITEMS}}
+        <div class="total">
+          <span>Total:</span>
+          <span>{{TOTAL}} EGP</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Delivery Information</div>
+        <div class="divider"></div>
+        <div class="info-row"><strong>Name:</strong> {{CUSTOMER_NAME}}</div>
+        <div class="info-row"><strong>Email:</strong> {{CUSTOMER_EMAIL}}</div>
+        <div class="info-row"><strong>Phone:</strong> {{CUSTOMER_PHONE}}</div>
+        <div class="info-row"><strong>Address:</strong> {{CUSTOMER_ADDRESS}}</div>
+        {{NOTES_SECTION}}
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>If you have any questions, please contact us at {{CONTACT_EMAIL}}</p>
+      <p>© {{YEAR}} {{STORE_NAME}}. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
